@@ -1,0 +1,13 @@
+# ignores all
+*
+
+!*/
+
+!.gitignore
+!README.md
+
+# ignores all .txt recursive from the current folder
+!**.c
+!**.h
+!**.s
+!**.uvproj
