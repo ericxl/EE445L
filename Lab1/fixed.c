@@ -3,7 +3,7 @@
 // Layer on top of ST7735 driver
 // Paul Heath, Eric Liang
 // Written: 9/6/2017
-// Last Updated: 9/7/2017
+// Last Updated: 9/11/2017
 // TA: Josh Cristol
 
 #include <stdio.h>
@@ -58,9 +58,9 @@ void ST7735_sDecOut3(int32_t n){
 void ST7735_uBinOut8(uint32_t n){
 	uint32_t ch;
 	// handle error
-	if(n > 256000){
+	if(n >= 256000){
 		for(uint8_t i = 0; i < 6; ++i){
-			if(i == 2){ 
+			if(i == 3){ 
 				ch = '.';
 			}
 			else{ 
@@ -71,24 +71,29 @@ void ST7735_uBinOut8(uint32_t n){
 	}
 	// no error
 	else{
-		n /= 256;
-		// put first digits unless they are zeros
-		for(uint16_t i = 10000; i >= 100; i /= 10){
-			ch = n / i;
-			n %= i;
-			if((ch != 0) || i == 100){
-				fputc(ch + 48, (FILE*) 3);
+		n = (n * 100) / 256;
+		uint32_t placeValue = 10000;
+		// ignore leading zeros
+		while(placeValue > 100){
+		  // break when you see nonzero leading value or the ones place 
+			if(n / placeValue){
+        break;
 			}
-			else{
-				fputc(' ', (FILE*) 3);
-			}
+			fputc(' ', (FILE*) 3);
+			placeValue /= 10;
+		}
+		// put digits up to the decimal point from the left
+		while(placeValue > 10){
+		  fputc(n / placeValue + 48, (FILE*) 3);
+		  n %= placeValue;
+		  placeValue /= 10;
 		}
 		fputc('.', (FILE*) 3);
-		// put remaining digits to screen
-		for(uint8_t i = 10; i >= 1; i /= 10){
-			ch = n/i;
-			n %= i;
-			fputc(ch + 48, (FILE*) 3);
+		// put the last two digits
+		for(uint8_t i = 0; i < 2; ++i){
+			fputc(n / placeValue + 48, (FILE*) 3);
+			n %= placeValue;
+		  placeValue /= 10;
 		}
 	}
 }
