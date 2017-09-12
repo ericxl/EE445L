@@ -7,6 +7,7 @@
 // TA: Josh Cristol
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "fixed.h"
 #include "ST7735.h"
@@ -98,29 +99,29 @@ void ST7735_uBinOut8(uint32_t n){
 	}
 }
 
-volatile int32_t MinX, MaxX, MinY, MaxY;
 
+
+int32_t MinX, MaxX, MinY, MaxY;
 void ST7735_XYplotInit(char *title, int32_t minX, int32_t maxX, int32_t minY, int32_t maxY)
 {
   MinX = minX;
   MaxX = maxX;
   MinY = minY;
   MaxY = maxY;
-  ST7735_FillScreen(0);
-  ST7735_SetCursor(0, 0);
-  ST7735_SetTextColor(ST7735_WHITE);
+	ST7735_PlotClear(minY, maxY);
+  ST7735_FillScreen(ST7735_BLACK);
+  ST7735_SetCursor(minX / 1000, maxY / 1000);
   ST7735_OutString(title);
 }
 
 void ST7735_XYplot(uint32_t count, int32_t bufX[], int32_t bufY[])
 {
-  for (int i = 0; i < count; ++i) {
-    int x = bufX[i];
-    int y = bufY[i];
-		
-		if (x <= MaxX && x >= MinX && y <= MaxY && y >= MinY){
-			int hwX = (127 * (x - MinX)) / (MaxX - MinX);
-			int hwY = 32 + (127 * (MaxY - y)) / (MaxY - MinY);
+  for (int i = 0; i < count; i++) {
+		if (bufX[i] <= MaxX && bufX[i] >= MinX && bufY[i] <= MaxY && bufY[i] >= MinY){
+			int32_t rangeX = MaxX - MinX;
+			int32_t rangeY = MaxY - MinY;
+			int32_t hwX = (127 * (bufX[i] - MinX)) / rangeX;
+			int32_t hwY = 32 + (127 * (MaxY - bufY[i])) / rangeY;
 			
 			ST7735_DrawPixel(hwX, hwY, ST7735_MAGENTA);
 		}
