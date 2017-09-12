@@ -1,10 +1,12 @@
-// filename ******** fixed.h ************** 
-// possible header file for Lab 1 Spring 2017
-// feel free to change the specific syntax of your system
-// put your name here
-// put the date here
-#include <stdio.h>
-#include <stdint.h>
+// fixed.h
+// Header file for Lab 1 Spring 2017 
+// Paul Heath, Eric Liang
+// Written: 9/6/2017
+// Last Updated: 9/7/2017
+// TA: Josh Cristol
+
+#ifndef FIXED_HEADER
+#define FIXED_HEADER
 
 /****************ST7735_sDecOut3***************
  converts fixed point number to LCD
@@ -71,5 +73,5 @@ void ST7735_XYplotInit(char *title, int32_t minX, int32_t maxX, int32_t minY, in
 */
 void ST7735_XYplot(uint32_t num, int32_t bufX[], int32_t bufY[]);
 
-
+#endif
 

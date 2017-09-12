@@ -1,10 +1,11 @@
 // Lab1.c
 // Runs on TM4C123
 // Uses ST7735.c LCD.
-// Jonathan Valvano
-// January 17, 2017
-// Possible main program to test the lab
-// Feel free to edit this to match your specifications
+// Jonathan Valvano, Paul Heath, Eric Liang
+// Written: January 17, 2017
+// Last Update: September 7, 2017
+// Main program to test lab 1
+// TA: Josh Cristol
 
 // Backlight (pin 10) connected to +3.3 V
 // MISO (pin 9) unconnected 
@@ -18,7 +19,7 @@
 // Gnd (pin 1) connected to ground
 #include <stdio.h>
 #include <stdint.h>
-#include "string.h"
+#include <string.h>
 #include "ST7735.h"
 #include "PLL.h"
 #include "fixed.h"
