@@ -1,9 +1,10 @@
  // fixed.c 
 // C file for Lab 1 Spring 2017
 // Layer on top of ST7735 driver
+// See fixed.h for descriptions of subroutines
 // Paul Heath, Eric Liang
 // Written: 9/6/2017
-// Last Updated: 9/11/2017
+// Last Updated: 9/12/2017
 // TA: Josh Cristol
 
 #include <stdio.h>
@@ -100,32 +101,29 @@ void ST7735_uBinOut8(uint32_t n){
 }
 
 
-
-int32_t MinX, MaxX, MinY, MaxY;
-void ST7735_XYplotInit(char *title, int32_t minX, int32_t maxX, int32_t minY, int32_t maxY)
-{
+//**************ST7735_XYplotInit***************
+static int32_t MinX, MaxX, MinY, MaxY;
+void ST7735_XYplotInit(char *title, int32_t minX, int32_t maxX, int32_t minY, int32_t maxY){
   MinX = minX;
   MaxX = maxX;
   MinY = minY;
   MaxY = maxY;
 	ST7735_PlotClear(minY, maxY);
   ST7735_FillScreen(ST7735_BLACK);
-  ST7735_SetCursor(minX / 1000, maxY / 1000);
+	ST7735_SetCursor(0, 0);
   ST7735_OutString(title);
 }
 
-void ST7735_XYplot(uint32_t count, int32_t bufX[], int32_t bufY[])
-{
+
+//**************ST7735_XYplot***************
+void ST7735_XYplot(uint32_t count, int32_t bufX[], int32_t bufY[]){
   for (int i = 0; i < count; i++) {
 		if (bufX[i] <= MaxX && bufX[i] >= MinX && bufY[i] <= MaxY && bufY[i] >= MinY){
 			int32_t rangeX = MaxX - MinX;
 			int32_t rangeY = MaxY - MinY;
-			int32_t hwX = (127 * (bufX[i] - MinX)) / rangeX;
-			int32_t hwY = 32 + (127 * (MaxY - bufY[i])) / rangeY;
-			
-			ST7735_DrawPixel(hwX, hwY, ST7735_MAGENTA);
+			int32_t coordinateX = (127 * (bufX[i] - MinX)) / rangeX;
+			int32_t coordinateY = 32 + (127 * (MaxY - bufY[i])) / rangeY;	
+			ST7735_DrawPixel(coordinateX, coordinateY, ST7735_MAGENTA);
 		}
   }
 }
-
-
