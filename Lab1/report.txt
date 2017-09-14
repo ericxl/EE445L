@@ -1,0 +1,13 @@
+Lab 1 Report
+Paul Heath and Xiaoyong Liang
+
+Objective
+The objective of this lab is to introduce students to Embedded System class, specifically the Keil Software’s environment, and the tm4c1294 Microcontroller. In addition, this lab also introduces the fix point numbers and develops useful code for future labs. The students also created fixed-point routines that will be used in future labs. 
+
+Analysis and Discussion
+1. It is good because of modularity. The content inside rit128x96x4.c is too low level and there exists high level code provided by the system to accomplish what rit128x96x4.c can do, so there is no need to call that file. This will minimize the risk and increase development speed.
+2. The decimal point is in the exact same physical position because it’s easier to read and much easier to display. This way, the resolution and boundary of the fixed-point numbers are clear.
+3. You would use fixed point over floating point when the decimal point of numbers is finite. For example, use fixed point for currency representation. This way, calculations based on fixed point are much faster and optimized for the system. Use floating point numbers if the decimal is not finite.
+4. Binary fixed-point is better used for the hardware because it has support over it. Decimal fixed-point is better used for human readability. In addition, for fraction numbers it is better to use decimal fixed-point.
+5. The example would be currency representation. Decimal fixed-point would be used because the smallest unit in almost any currency is cent which is 0.01.
+6. Yes because the architecture of ARM Cortex M4 supports floating points. The cost is performance because it takes more clock cycles to calculate floating point numbers.
