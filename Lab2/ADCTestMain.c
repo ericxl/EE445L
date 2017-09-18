@@ -29,6 +29,7 @@
 #include "ADCSWTrigger.h"
 #include "../inc/tm4c123gh6pm.h"
 #include "PLL.h"
+#include "Timer1.h"
 
 #define PF2             (*((volatile uint32_t *)0x40025010))
 #define PF1             (*((volatile uint32_t *)0x40025008))
@@ -78,7 +79,7 @@ void Timer0A_Handler(void){
 	  ++DataIdx;
 	}
 	if(TimeIdx < 1000){	
-	  TimeDump[TimeIdx] = TIMER1_TAR_R;
+	  TimeDump[TimeIdx] = Timer1_Val();
 	  ++TimeIdx;
 	}
   PF2 ^= 0x04;                   // profile
@@ -115,11 +116,15 @@ int main(void){
   GPIO_PORTF_PCTL_R = (GPIO_PORTF_PCTL_R&0xFFFFF00F)+0x00000000;
   GPIO_PORTF_AMSEL_R = 0;               // disable analog functionality on PF
   PF2 = 0;                      // turn off LED
+	Timer1_Init();
   EnableInterrupts();
   while(1){
     PF1 ^= 0x02;  // toggles when running in main
 		if(DataIdx >= 1000 || TimeIdx >= 1000){
+			DisableInterrupts();
 			calculate();
+			
+			while(1){};
 		}
   }
 }
