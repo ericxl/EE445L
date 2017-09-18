@@ -26,10 +26,12 @@
 // bottom of X-ohm potentiometer connected to ground
 // top of X-ohm potentiometer connected to +3.3V 
 #include <stdint.h>
+#include <stdio.h>
 #include "ADCSWTrigger.h"
 #include "../inc/tm4c123gh6pm.h"
 #include "PLL.h"
 #include "Timer1.h"
+#include "ST7735.h"
 
 #define PF2             (*((volatile uint32_t *)0x40025010))
 #define PF1             (*((volatile uint32_t *)0x40025008))
@@ -39,14 +41,18 @@ long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
 
-uint32_t TimeDump[1000];
-uint32_t DataDump[1000];
-uint32_t TimeIdx = 0;
-uint32_t DataIdx = 0;
-uint32_t TimeDiffs[999];
-uint16_t NumofOccur[4096];
+volatile uint32_t TimeDump[1000];
+volatile uint32_t DataDump[1000];
+volatile uint32_t TimeIdx = 0;
+volatile uint32_t DataIdx = 0;
+volatile uint32_t TimeDiffs[999];
+volatile uint16_t NumofOccur[4096];
 
 volatile uint32_t ADCvalue;
+volatile uint32_t Jitter;
+
+
+
 // This debug function initializes Timer0A to request interrupts
 // at a 100 Hz frequency.  It is similar to FreqMeasure.c.
 void Timer0A_Init100HzInt(void){
@@ -69,6 +75,9 @@ void Timer0A_Init100HzInt(void){
   NVIC_PRI4_R = (NVIC_PRI4_R&0x00FFFFFF)|0x40000000; // top 3 bits
   NVIC_EN0_R = 1<<19;              // enable interrupt 19 in NVIC
 }
+
+
+
 void Timer0A_Handler(void){
   TIMER0_ICR_R = TIMER_ICR_TATOCINT;    // acknowledge timer0A timeout
   PF2 ^= 0x04;                   // profile
@@ -85,26 +94,58 @@ void Timer0A_Handler(void){
   PF2 ^= 0x04;                   // profile
 }
 
-void calculate(void){
+
+
+// This function calculates and returns the jitter of the ADC sampling.
+// It also sets the bins for a histogram of the ADC data to the correct values.
+uint32_t calculate(void){
 	uint32_t jitter;
-	uint32_t min = TimeDump[1] - TimeDump[0];
+	uint32_t min = TimeDump[1] - TimeDump[0];   // pick first delta time value as min and max
 	uint32_t max = TimeDump[1] - TimeDump[0];
   for(uint32_t i = 0; i < 999; ++i){
 		TimeDiffs[i] = TimeDump[i + 1] - TimeDump[i];
-		if(TimeDiffs[i] > max){
+		if(TimeDiffs[i] > max){            // get max of delta time values
 			max = TimeDiffs[i];
 		}
-		if(TimeDiffs[i] < min){
+		if(TimeDiffs[i] < min){            // get min of delta time values
 			min = TimeDiffs[i];
 		}
 	}
-	jitter = max - min;
+	jitter = max - min;             
 	for(uint32_t i = 0; i < 1000; ++i){
 		++NumofOccur[DataDump[i]];
 	}
+	return jitter;
 }
 
+
+
+void putClockToMicroSHelper(uint32_t clockVal){
+	if(clockVal == 0){
+		return;
+	}
+	uint32_t digitToPrint = clockVal % 10;
+	clockVal /= 10;
+	putClockToMicroSHelper(clockVal);
+	fputc(digitToPrint + 48, (FILE*) 3);
+}
+
+
+
+void putClockToMicroS(uint32_t clockVal){
+	if(clockVal == 0){
+		fputc(48, (FILE*) 3);
+		return;
+	}
+	clockVal *= 12500;
+  putClockToMicroSHelper(clockVal);
+}
+
+
+
 int main(void){
+	char collectStr[] = {'C', 'o', 'l', 'l', 'e', 'c', 't', 'i', 'n', 'g', ' ', 'D', 'a', 't', 'a', '.', '.', '.', 0};
+	char jitterStr[] = {'J', 'i', 't', 't', 'e', 'r', ':', ' ', 0};
   PLL_Init(Bus80MHz);                   // 80 MHz
   SYSCTL_RCGCGPIO_R |= 0x20;            // activate port F
   ADC0_InitSWTriggerSeq3_Ch9();         // allow time to finish activating
@@ -115,15 +156,22 @@ int main(void){
                                         // configure PF2 as GPIO
   GPIO_PORTF_PCTL_R = (GPIO_PORTF_PCTL_R&0xFFFFF00F)+0x00000000;
   GPIO_PORTF_AMSEL_R = 0;               // disable analog functionality on PF
-  PF2 = 0;                      // turn off LED
+  PF2 = 0;                              // turn off LED
 	Timer1_Init();
+	ST7735_InitR(INITR_REDTAB);
+	ST7735_FillScreen(ST7735_BLACK);
+	ST7735_OutString(collectStr);
   EnableInterrupts();
   while(1){
     PF1 ^= 0x02;  // toggles when running in main
-		if(DataIdx >= 1000 || TimeIdx >= 1000){
+		if(DataIdx >= 1000 || TimeIdx >= 1000){        // stop sampling after 1000 samples
 			DisableInterrupts();
-			calculate();
-			
+			calculate();                                 // calculate jitter and histogram data
+			ST7735_FillScreen(ST7735_BLACK);
+			ST7735_SetCursor(0, 0);
+			ST7735_OutString(jitterStr);
+			putClockToMicroS(Jitter);
+			ST7735_PlotClear(0, 100);
 			while(1){};
 		}
   }
