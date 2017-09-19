@@ -46,10 +46,11 @@ volatile uint32_t DataDump[1000];
 volatile uint32_t TimeIdx = 0;
 volatile uint32_t DataIdx = 0;
 volatile uint32_t TimeDiffs[999];
-volatile uint16_t NumofOccur[4096];
+volatile uint32_t NumofOccur[4096];
 
 volatile uint32_t ADCvalue;
 volatile uint32_t Jitter;
+volatile uint32_t MaxY;
 
 
 
@@ -98,12 +99,15 @@ void Timer0A_Handler(void){
 
 // This function calculates and returns the jitter of the ADC sampling.
 // It also sets the bins for a histogram of the ADC data to the correct values.
-uint32_t calculate(void){
-	uint32_t jitter;
-	uint32_t min = TimeDump[1] - TimeDump[0];   // pick first delta time value as min and max
-	uint32_t max = TimeDump[1] - TimeDump[0];
+void calculate(void){
+	uint32_t min = TimeDump[0] - TimeDump[1];   // pick first delta time value as min and max
+	uint32_t max = TimeDump[0] - TimeDump[1];
   for(uint32_t i = 0; i < 999; ++i){
-		TimeDiffs[i] = TimeDump[i + 1] - TimeDump[i];
+		TimeDiffs[i] = TimeDump[i] - TimeDump[i + 1];
+		if(i < 5){
+			max = TimeDiffs[i];
+			min = TimeDiffs[i];
+		}
 		if(TimeDiffs[i] > max){            // get max of delta time values
 			max = TimeDiffs[i];
 		}
@@ -111,34 +115,74 @@ uint32_t calculate(void){
 			min = TimeDiffs[i];
 		}
 	}
-	jitter = max - min;             
+	Jitter = max - min;             
 	for(uint32_t i = 0; i < 1000; ++i){
 		++NumofOccur[DataDump[i]];
 	}
-	return jitter;
+	MaxY = NumofOccur[0];
+	for(uint32_t i = 0; i < 4096; ++i){
+		if(NumofOccur[i] > MaxY){
+			MaxY = NumofOccur[i];
+		}
+		if(NumofOccur[i] < 2){
+			NumofOccur[i] = 0;
+		}
+	}
 }
 
 
 
-void putClockToMicroSHelper(uint32_t clockVal){
+void putClockToNanoSHelper(uint32_t clockVal){
 	if(clockVal == 0){
 		return;
 	}
 	uint32_t digitToPrint = clockVal % 10;
 	clockVal /= 10;
-	putClockToMicroSHelper(clockVal);
+	putClockToNanoSHelper(clockVal);
 	fputc(digitToPrint + 48, (FILE*) 3);
 }
 
 
 
-void putClockToMicroS(uint32_t clockVal){
+void putClockToNanoS(uint32_t clockVal){
 	if(clockVal == 0){
 		fputc(48, (FILE*) 3);
-		return;
 	}
-	clockVal *= 12500;
-  putClockToMicroSHelper(clockVal);
+	else{
+	  clockVal *= (12500 / 1000);
+    putClockToNanoSHelper(clockVal);
+	}
+	fputc(' ', (FILE*) 3);
+	fputc('n', (FILE*) 3);
+	fputc('s', (FILE*) 3);
+}
+
+
+
+void plotHisto(void){
+	uint32_t first = 0;
+	uint32_t last = 0;
+	uint32_t middle = 0;
+	uint8_t firstFound = 0;
+	for(uint32_t i = 0; i < 4096; ++i){
+		if(!firstFound){
+			if(NumofOccur[i] != 0){
+				firstFound = 1;
+				first = i;
+				last = i;
+			}
+		}
+		else{
+			if(NumofOccur[i] != 0){
+				last = i;
+			}
+		}
+	}
+	middle = first + (last - first) / 2 ;
+	for(uint32_t i = middle - 64; i < (middle + 64); ++i){
+		ST7735_PlotBar(NumofOccur[i]);
+		ST7735_PlotNext();
+	}	
 }
 
 
@@ -163,15 +207,17 @@ int main(void){
 	ST7735_OutString(collectStr);
   EnableInterrupts();
   while(1){
-    PF1 ^= 0x02;  // toggles when running in main
+		PF1 ^= 0x02;
+    PF1 = (PF1*12345678)/1234567+0x02;
 		if(DataIdx >= 1000 || TimeIdx >= 1000){        // stop sampling after 1000 samples
 			DisableInterrupts();
 			calculate();                                 // calculate jitter and histogram data
 			ST7735_FillScreen(ST7735_BLACK);
 			ST7735_SetCursor(0, 0);
 			ST7735_OutString(jitterStr);
-			putClockToMicroS(Jitter);
-			ST7735_PlotClear(0, 100);
+			putClockToNanoS(Jitter);
+			ST7735_PlotClear(0, MaxY);
+			plotHisto();
 			while(1){};
 		}
   }
