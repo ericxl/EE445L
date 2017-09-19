@@ -31,6 +31,7 @@
 #include "../inc/tm4c123gh6pm.h"
 #include "PLL.h"
 #include "Timer1.h"
+#include "Timer2.h"
 #include "ST7735.h"
 
 #define PF2             (*((volatile uint32_t *)0x40025010))
@@ -202,13 +203,13 @@ int main(void){
   GPIO_PORTF_AMSEL_R = 0;               // disable analog functionality on PF
   PF2 = 0;                              // turn off LED
 	Timer1_Init();
+	Timer2_Init(791999);
 	ST7735_InitR(INITR_REDTAB);
 	ST7735_FillScreen(ST7735_BLACK);
 	ST7735_OutString(collectStr);
   EnableInterrupts();
   while(1){
 		PF1 ^= 0x02;
-    PF1 = (PF1*12345678)/1234567+0x02;
 		if(DataIdx >= 1000 || TimeIdx >= 1000){        // stop sampling after 1000 samples
 			DisableInterrupts();
 			calculate();                                 // calculate jitter and histogram data
