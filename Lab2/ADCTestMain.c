@@ -5,6 +5,8 @@
 // debugger and viewed with the variable watch feature.
 // Daniel Valvano
 // September 5, 2015
+// Repurposed by: Paul Heath, Eric Liang 9/20/2017
+// Last Updated: 9/22/2017
 
 /* This example accompanies the book
    "Embedded Systems: Real Time Interfacing to Arm Cortex M Microcontrollers",
@@ -21,10 +23,7 @@
  For more information about my classes, my research, and my books, see
  http://users.ece.utexas.edu/~valvano/
  */
-
-// center of X-ohm potentiometer connected to PE3/AIN0
-// bottom of X-ohm potentiometer connected to ground
-// top of X-ohm potentiometer connected to +3.3V 
+ 
 #include <stdint.h>
 #include <stdio.h>
 #include "ADCSWTrigger.h"
@@ -85,6 +84,7 @@ void Timer0A_Handler(void){
   PF2 ^= 0x04;                   // profile
   PF2 ^= 0x04;                   // profile
   ADCvalue = ADC0_InSeq3();
+	// put time and data to dump
 	if(DataIdx < 1000){
 	  DataDump[DataIdx] = ADCvalue;
 	  ++DataIdx;
@@ -98,7 +98,7 @@ void Timer0A_Handler(void){
 
 
 
-// This function calculates and returns the jitter of the ADC sampling.
+// This function calculates the jitter of the ADC sampling.
 // It also sets the bins for a histogram of the ADC data to the correct values.
 void calculate(void){
 	uint32_t min = TimeDump[0] - TimeDump[1];   // pick first delta time value as min and max
@@ -132,7 +132,7 @@ void calculate(void){
 }
 
 
-
+//Recursive Helper to Plot Jitter Digits in Correct Order
 void putClockToNanoSHelper(uint32_t clockVal){
 	if(clockVal == 0){
 		return;
@@ -144,7 +144,7 @@ void putClockToNanoSHelper(uint32_t clockVal){
 }
 
 
-
+//Puts Jitter Clock Value to Screen in Nano Seconds
 void putClockToNanoS(uint32_t clockVal){
 	if(clockVal == 0){
 		fputc(48, (FILE*) 3);
@@ -159,12 +159,13 @@ void putClockToNanoS(uint32_t clockVal){
 }
 
 
-
+//Plots Histogram of PMF data 
 void plotHisto(void){
 	uint32_t first = 0;
 	uint32_t last = 0;
 	uint32_t middle = 0;
 	uint8_t firstFound = 0;
+	// find middle of histogram
 	for(uint32_t i = 0; i < 4096; ++i){
 		if(!firstFound){
 			if(NumofOccur[i] != 0){
@@ -180,6 +181,7 @@ void plotHisto(void){
 		}
 	}
 	middle = first + (last - first) / 2 ;
+	// assumes values land within 64 bins of the middle value
 	for(uint32_t i = middle - 64; i < (middle + 64); ++i){
 		ST7735_PlotBar(NumofOccur[i]);
 		ST7735_PlotNext();

@@ -5,6 +5,8 @@
 // and return the result.
 // Daniel Valvano
 // August 6, 2015
+// Repurposed by: Paul Heath, Eric Liang 9/20/2017
+// Last Updated: 9/22/2017
 
 /* This example accompanies the book
    "Embedded Systems: Real Time Interfacing to Arm Cortex M Microcontrollers",

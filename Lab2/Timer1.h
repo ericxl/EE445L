@@ -3,6 +3,8 @@
 // Use Timer1 in 32-bit periodic mode to request interrupts at a periodic rate
 // Daniel Valvano
 // May 5, 2015
+// Repurposed by: Paul Heath, Eric Liang 9/20/2017
+// Last Updated: 9/22/2017
 
 
 /* This example accompanies the book
