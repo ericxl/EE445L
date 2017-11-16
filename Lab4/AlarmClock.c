@@ -22,6 +22,18 @@ uint32_t GetHr(void){
 	return hours;
 }
 
+void SetSec(uint32_t s){
+	secs = s;
+}
+
+void SetMin(uint32_t m){
+	mins = m;
+}
+
+void SetHr(uint32_t h){
+	hours = h;
+}
+
 uint32_t GetAlrmMin(void){
 	return alarmMin;
 }
