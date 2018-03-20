@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "../inc/tm4c123gh6pm.h"
 #include "ADCTimerTrigger.h"
+#include "UART.h"
 
 // There are many choices to make when using the ADC, and many
 // different combinations of settings will all do basically the
@@ -115,6 +116,34 @@ void ADC_FIFO_Push(int32_t data) {
 	fifo[fifoEnd] = data;
 }
 
+volatile uint32_t currentIndex = 0;
+volatile uint32_t data[100];
+int printed = 0;
+
+void ADC0Seq3_Handler(void){
+	ADC0_ISC_R = 0x0008;
+	uint32_t result = ADC0_SSFIFO3_R&0xFFF;
+	if((fifoStart + 1) % FIFO_SIZE == fifoEnd) {
+		ADC_FIFO_Pop();
+	}
+	ADC_FIFO_Push(result);
+	
+		
+	if (currentIndex < 100){
+		data[currentIndex] = result;
+		currentIndex++;
+	}
+	else if (printed ==0 ){
+
+		for(int i = 0; i < 100; i += 1) {
+			UART_OutUDec(data[i]);
+			UART_OutString("\r\n");
+		}
+		printed = 1;
+	}
+}
+
+
 int32_t ADC_FIFO_Pop(void) {
 	if(fifoStart == fifoEnd) {
 		return -1;
@@ -124,18 +153,6 @@ int32_t ADC_FIFO_Pop(void) {
 	return poppedValue;
 }
 
-//------------ADC0_InSeq3------------
-// Busy-wait Analog to digital conversion
-// Input: none
-// Output: 12-bit result of ADC conversion
-void ADC0Seq3_Handler(void){
-	ADC0_ISC_R = 0x0008;
-	uint32_t result = ADC0_SSFIFO3_R&0xFFF;
-	if((fifoStart + 1) % FIFO_SIZE == fifoEnd) {
-		ADC_FIFO_Pop();
-	}
-	ADC_FIFO_Push(result);
-}
 
 int32_t* ADC_FIFO_Get(void) {
 	return fifo;

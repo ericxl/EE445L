@@ -21,10 +21,10 @@
  */
 
 /**
- * Note: Three ways we could sample using an ADC conversion process:
- * 1. Successive approximation
+ * Three ways to sample using an ADC conversion :
+ * 1. Flash
  * 2. Sigma delta
- * 3. Flash
+ * 3. Successive approximation
  *
  * To initiate an ADC conversion process, we could:
  * 1. Rising/falling edges or timer values
@@ -40,7 +40,6 @@
  
 #include <stdio.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "ADCTimerTrigger.h"
 #include "ST7735.h"
@@ -54,9 +53,6 @@ long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
 
-volatile uint32_t currentIndex;
-volatile uint32_t data[100];
-
 int main(void){ 
 	DisableInterrupts();
 	PLL_Init(Bus80MHz);	// bus clock at 80 MHz
@@ -66,19 +62,10 @@ int main(void){
 		
 	EnableInterrupts();
 	
-	/*
-	UART_OutString("Points: \r\n");
-	while(currentIndex < 100);
-	for(int i = 0; i < 100; i += 1) {
-		UART_OutUDec(data[i]);
-		UART_OutString("\r\n");
-	}
-	*/
-	
 	while(1) {
 		ST7735_SetCursor(0, 0);
 		int32_t adc = ADC_FIFO_CurrentValue();
-		int32_t currentTemperature = Temperature_Convert(adc);
+		int32_t currentTemperature = get_temp(adc);
 		printf("Temperature %5d.%02d\n", currentTemperature / 100, currentTemperature % 100);
 		
 		printf("ADC %d\n", adc);
@@ -93,10 +80,7 @@ int main(void){
 
 		
 		for(int i = 0; i < FIFO_SIZE; i += 1) {
-			int32_t point = 128 - Temperature_Convert(ADC_FIFO_Get()[i]) * 2 / 100;
-			//ST7735_DrawPixel(i+1, point+1, ST7735_RED);
-			//ST7735_DrawPixel(i+1, point, ST7735_RED);
-			//ST7735_DrawPixel(i, point+1, ST7735_RED);
+			int32_t point = 128 - get_temp(ADC_FIFO_Get()[i]) * 2 / 100;
 			ST7735_DrawPixel(i, point, ST7735_RED);
 		}
 		WaitForInterrupt();

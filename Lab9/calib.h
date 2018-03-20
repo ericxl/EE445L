@@ -1,5 +1,3 @@
-
 #include <stdint.h>
 
-int32_t Temperature_Convert(int32_t);
-
+int32_t get_temp(int32_t adc);

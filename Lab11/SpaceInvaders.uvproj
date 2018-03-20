@@ -465,6 +465,26 @@
               <FileType>1</FileType>
               <FilePath>.\ST7735.c</FilePath>
             </File>
+            <File>
+              <FileName>carDodge.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\carDodge.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADCSWTrigger.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ADCSWTrigger.c</FilePath>
+            </File>
+            <File>
+              <FileName>PWM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\PWM.c</FilePath>
+            </File>
+            <File>
+              <FileName>Tachometer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Tachometer.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

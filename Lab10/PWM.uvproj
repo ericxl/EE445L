@@ -221,7 +221,7 @@
             <hadIRAM2>0</hadIRAM2>
             <hadIROM2>0</hadIROM2>
             <StupSel>8</StupSel>
-            <useUlib>1</useUlib>
+            <useUlib>0</useUlib>
             <EndSel>0</EndSel>
             <uLtcg>0</uLtcg>
             <RoSelD>3</RoSelD>
@@ -421,44 +421,24 @@
               <FilePath>.\PWM.c</FilePath>
             </File>
             <File>
-              <FileName>Main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Main.c</FilePath>
-            </File>
-            <File>
-              <FileName>PLL.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\PLL.h</FilePath>
-            </File>
-            <File>
-              <FileName>PWM.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\PWM.h</FilePath>
-            </File>
-            <File>
-              <FileName>Tachometer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Tachometer.c</FilePath>
-            </File>
-            <File>
-              <FileName>Tachometer.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\Tachometer.h</FilePath>
-            </File>
-            <File>
               <FileName>ST7735.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\ST7735.c</FilePath>
             </File>
             <File>
-              <FileName>ST7735.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\ST7735.h</FilePath>
+              <FileName>Switch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Switch.c</FilePath>
             </File>
             <File>
-              <FileName>Buttons.c</FileName>
+              <FileName>Main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\Buttons.c</FilePath>
+              <FilePath>.\Main.c</FilePath>
+            </File>
+            <File>
+              <FileName>Tachometer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Tachometer.c</FilePath>
             </File>
             <File>
               <FileName>Timers.c</FileName>

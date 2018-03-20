@@ -59,6 +59,10 @@
 #include "Timer0.h"
 #include "Sound.h"
 #include "Accelerometer.h"
+#include "carDodge.h"
+#include "ADCSWTrigger.h"
+#include "PWM.h"
+#include "Tachometer.h"
 
 
 void DisableInterrupts(void); // Disable interrupts
@@ -274,7 +278,6 @@ int main(void){
 	ADC_Init();
 	Sound_Init();
   Output_Init();
-	gameInit();
 	portFInit();
 	
   ST7735_FillScreen(0x0000);            // set screen to black
@@ -290,19 +293,6 @@ int main(void){
 	ST7735_SetCursor(1, 5);
 	ST7735_OutString("Go!");
 	Delay100ms(5);
-	
-	ST7735_FillScreen(0x0000);	
-  
-  ST7735_DrawBitmap(playerPos.X, playerPos.Y, PlayerShip0, playerWidth,playerHeight); // player ship middle bottom
-  //ST7735_DrawBitmap(53, 151, Bunker0, 18,5);
-
-  ST7735_DrawBitmap(enemyPostions[0].X, enemyPostions[0].Y, SmallEnemy10pointA, enemyWidth,enemyHeight);
-  ST7735_DrawBitmap(enemyPostions[1].X, enemyPostions[1].Y, SmallEnemy10pointB, enemyWidth,enemyHeight);
-  ST7735_DrawBitmap(enemyPostions[2].X, enemyPostions[2].Y, SmallEnemy20pointA, enemyWidth,enemyHeight);
-  ST7735_DrawBitmap(enemyPostions[3].X, enemyPostions[3].Y, SmallEnemy20pointB, enemyWidth,enemyHeight);
-  ST7735_DrawBitmap(enemyPostions[4].X, enemyPostions[4].Y, SmallEnemy30pointA, enemyWidth,enemyHeight);
-  ST7735_DrawBitmap(enemyPostions[5].X, enemyPostions[5].Y, SmallEnemy30pointB, enemyWidth,enemyHeight);
-
 
   //Delay100ms(50);              // delay 5 sec at 80 MHz
 
@@ -318,10 +308,52 @@ int main(void){
   LCD_OutDec(1234);
 */	
 	
+	PWM0A_Init(40000, 30000);
+
+	SYSCTL_RCGCGPIO_R |= 0x08;            // 2) activate port B
+  int delay = SYSCTL_RCGCGPIO_R;            // allow time to finish activating
+  GPIO_PORTE_AFSEL_R &= ~0x80;           // enable alt funct on PB7
+  //GPIO_PORTE_PCTL_R &= ~0xF0000000;     // configure PB7 as M0PWM1
+  //GPIO_PORTE_PCTL_R |= 0x40000000;
+  GPIO_PORTE_AMSEL_R &= ~0x80;          // disable analog functionality on PB7
+  GPIO_PORTE_DEN_R |= 0x80;
+	GPIO_PORTE_DIR_R |= 0x80;
+	GPIO_PORTE_DATA_R |= 0x80;
+	GPIO_PORTE_PCTL_R &= ~0x00000FFF; // regular GPIO function
+	
+	ST7735_FillScreen(0);
+	
+	carDodge();
+	
+	
+	
+	
+	
+	
+	
+	gameInit();
+	
 	Timer0_Init(&timer0Handler, F40HZ); //set timer0 to 40 HZ
 	
 	Timer1_Init(&timer1Handler, F40HZ); //set timer1 to 40 HZ
+	
 	EnableInterrupts();
+	
+	ST7735_FillScreen(0);
+	
+	
+  
+  ST7735_DrawBitmap(playerPos.X, playerPos.Y, PlayerShip0, playerWidth,playerHeight); // player ship middle bottom
+  //ST7735_DrawBitmap(53, 151, Bunker0, 18,5);
+
+  ST7735_DrawBitmap(enemyPostions[0].X, enemyPostions[0].Y, SmallEnemy10pointA, enemyWidth,enemyHeight);
+  ST7735_DrawBitmap(enemyPostions[1].X, enemyPostions[1].Y, SmallEnemy10pointB, enemyWidth,enemyHeight);
+  ST7735_DrawBitmap(enemyPostions[2].X, enemyPostions[2].Y, SmallEnemy20pointA, enemyWidth,enemyHeight);
+  ST7735_DrawBitmap(enemyPostions[3].X, enemyPostions[3].Y, SmallEnemy20pointB, enemyWidth,enemyHeight);
+  ST7735_DrawBitmap(enemyPostions[4].X, enemyPostions[4].Y, SmallEnemy30pointA, enemyWidth,enemyHeight);
+  ST7735_DrawBitmap(enemyPostions[5].X, enemyPostions[5].Y, SmallEnemy30pointB, enemyWidth,enemyHeight);
+
+	
 	
   while(1){
 		
@@ -337,7 +369,7 @@ int main(void){
 //						Sound_Mute();
 //			}
 			
-			if((GPIO_PORTF_DATA_R & 0x01) != 0x01){ 
+			if((GPIO_PORTB_DATA_R & 0x01) != 0x01){ 
 				shouldDrawBullet = 1;
 				Sound_Shoot();
 				Delay100ms(2);
@@ -389,9 +421,7 @@ void timer0Handler() {
 					enemyPostions[i].isDead = 1;
 					score++;
 				}
-				
 			}
-			
 			
 			if(enemyPostions[i].isDead == 1) {
 				ST7735_DrawBitmap(enemyPostions[i].X, enemyPostions[i].Y, BigExplosion0, enemyWidth,enemyHeight);
@@ -453,15 +483,11 @@ void timer0Handler() {
 			LCD_OutDec(score);
 			gameOverDisplayed = 1;
 		}
-		
-		
 	}
-	
 }
 
-
 void timer1Handler() {
-	Data = ADC_In();			//retrieves position data
+	Data = ADC0_InSeq3();			//retrieves position data
 	moveShip = 1;					//sets flag to show new data ready
 }
 
@@ -518,6 +544,21 @@ void portFInit(void) {
   GPIO_PORTE_AFSEL_R &= ~0x02;   // disable alt funct on PB2-0
 
   GPIO_PORTE_DEN_R |= 0x02;      // enable digital I/O on PB2-0
+	
+	
+	SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOB; // activate port E
+
+  delay = SYSCTL_RCGC2_R;    // allow time to finish activating
+
+  GPIO_PORTB_AMSEL_R &= ~0x0F;      // no analog
+
+  GPIO_PORTB_PCTL_R &= ~0x00000FFF; // regular GPIO function
+
+  GPIO_PORTB_DIR_R &= ~0x02;      // make PE1 input
+
+  GPIO_PORTB_AFSEL_R &= ~0x02;   // disable alt funct on PB2-0
+
+  GPIO_PORTB_DEN_R |= 0x02;      // enable digital I/O on PB2-0
 }
 
 void SysTick_Init(uint32_t frequency) {

@@ -1,6 +1,4 @@
 #include <stdint.h>
-#define OFFSET 600
-/*DATA LOOK-UP TABLES*/
 
 uint16_t const ADCdata[53]={0,199,235,271,309,347,387,427,469,511,555,
      600,646,693,741,791,841,893,947,1002,1058,
@@ -24,8 +22,7 @@ uint16_t const Rdata[53]={4585,4585,4709,4837,4968,5104,5244,5389,5538,5692,5851
      14530,14992,15470,15966,16480,17013,17565,18138,18732,19348,19987,19987};
 
  
-int32_t Temperature_Convert(int32_t ADC_Sample){
-	
+int32_t get_temp(int32_t ADC_Sample){
 	int32_t i;
 
 	for(i=0; i < 53; i++){
@@ -36,6 +33,6 @@ int32_t Temperature_Convert(int32_t ADC_Sample){
 	
 	i -= 1;
 	
-	return Tdata[i]+OFFSET;
+	return Tdata[i]+600;
 }
 
